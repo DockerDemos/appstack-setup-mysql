@@ -1,8 +1,8 @@
 #!/bin/sh
 
 DB_NAME=$(pwgen -c -n -1)
-ROOT_PASS=$(pwgen -c -n -1 12)
-BACKUP_PASS=$(pwgen -c -n -1 12)
+ROOT_PASS=$(pwgen -c -n -1 16)
+BACKUP_PASS=$(pwgen -c -n -1 16)
 SECRET_DIR='/root/.secret'
 
 if [[ -z $ROOT_PASS ]] ; then
@@ -20,7 +20,7 @@ if [[ ! -d $SECRET_DIR ]] ; then
   exit 1
 fi
 
-if [[ -f $SECRET_DIR/dbdata ]] ; then
+if [[ -f $SECRET_DIR/dbdata.yaml ]] ; then
   echo "DATABASE INFO ALREADY EXISTS"
   exit 1
 fi
@@ -29,10 +29,10 @@ cat << EOF > $SECRET_DIR/dbdata.yaml
 ---
   name: $DB_NAME
   mysql: $ROOT_PASS 
-  backup: $BAKCUP_PASS
+  backup: $BACKUP_PASS
 EOF
 
-chmod 600 $SECRET_DIR/dbdata
+chmod 600 $SECRET_DIR/dbdata.yaml
 
 datadir='/var/lib/mysql'
 socketfile="$datadir/mysql.sock"
