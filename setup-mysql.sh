@@ -62,6 +62,7 @@ if [ ! -f "$datadir/ibdata1" ] ; then
 
   mysql -u root -e "CREATE DATABASE $DB_NAME;"
   mysql -u root -e "GRANT ALL PRIVILEGES on *.* to 'backup'@'%' IDENTIFIED BY \"$BACKUP_PASS\";"
+  mysql -u root -e "GRANT ALL PRIVILEGES on $DB_NAME.* to 'root'@'%' IDENTIFIED BY \"$ROOT_PASS\";"
   # MAKE SURE THIS ONE IS LAST, OR WE'LL HAVE TO PASS THE ROOT PW EVERY TIME
   mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD(\"$ROOT_PASS\") WHERE User='root'; FLUSH PRIVILEGES"
 
