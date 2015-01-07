@@ -52,12 +52,12 @@ if [ ! -f "$datadir/ibdata1" ] ; then
   chown mysql:mysql "$errlogfile" "$slologfile" "$logfile"
   chmod 0640 "$errlogfile" "$slologfile" "$logfile"
   
-  /usr/bin/mysql_install_db --datadir="$datadir" --user=mysql
+  /usr/bin/mysql_install_db --datadir="$datadir" --user=mysql > /dev/null
   
   chown -R mysql:mysql "$datadir"
   chmod 0755 "$datadir"
 
-  /usr/bin/mysqld_safe &
+  /usr/bin/mysqld_safe > /dev/null &
   sleep 5s
 
   mysql -u root -e "CREATE DATABASE $DB_NAME;"
