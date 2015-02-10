@@ -12,7 +12,7 @@ enabled=1\n\
 gpgcheck=0\n\
 " >> /etc/yum.repos.d/epel.repo
 
-RUN yum install -y pwgen mariadb-server && yum clean all
+RUN yum install -y pwgen hostname mariadb-server && yum clean all
 ADD setup-mysql.sh /setup-mysql.sh 
 
 ENTRYPOINT ["/setup-mysql.sh"]
