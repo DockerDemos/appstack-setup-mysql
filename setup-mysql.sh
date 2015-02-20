@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 
 DB_NAME=$(pwgen -c -n -1)
 ROOT_PASS=$(pwgen -c -n -1 16)
