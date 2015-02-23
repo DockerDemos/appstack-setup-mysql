@@ -1,70 +1,112 @@
 #!/bin/sh
-set -x
+
+###############################
+### SCRIPT CONFIG VARIABLES ###
+###############################
 
 DB_NAME=$(pwgen -c -n -1)
 ROOT_PASS=$(pwgen -c -n -1 16)
 BACKUP_PASS=$(pwgen -c -n -1 16)
 SECRET_DIR='/root/.secret'
+DB_FILE="${SECRET_DIR}/dbdata.yaml"
+LOGFILE='/var/log/setup-mysql.log'
+
+##############################
+### MYSQL CONFIG VARIABLES ###
+##############################
+
+DATADIR='/var/lib/mysql'
+MYSQL_LOGDIR='/var/log/mariadb'
+MYSQL_LOGFILE="$MYSQL_LOGDIR/mariadb.log"
+MYSQL_ERR_LOGFILE="$MYSQL_LOGDIR/mariadb-error.log"
+MYSQL_SLO_LOGFILE="$MYSQL_LOGDIR/mariadb-slow.log"
+
+### FUNCTIONS ###
+
+f_err() {
+  echo "$(date '+%Y-%m-%dT%H:%M') - ERROR: $1" | tee $LOGFILE
+  exit 1
+}
+
+f_warn() {
+  echo "$(date '+%Y-%m-%dT%H:%M') - $1" | tee $LOGFILE
+  exit 0
+}
+
+### LOGFILE AND TESTS ###
+
+if [[ ! -f $LOGFILE ]] ; then
+  touch $LOGFILE || f_warn "Unable to open ${LOGFILE}"
+  echo "$(date '+%Y-%m-%dT%H:%M') - Logfile opened" >> $LOGFILE
+fi
 
 if [[ -z $ROOT_PASS ]] ; then
-  echo "NO ROOT USER PASSWORD SPECIFIED"
-  exit 1
+  f_err "No root user password was generated - is pwgen installed?"
 fi
 
 if [[ -z $BACKUP_PASS ]] ; then
-  echo "NO BACKUP USER PASSWORD SPECIFIED"
-  exit 1
+  f_err "No backup password was generated - is pwgen installed?"
 fi
 
 if [[ ! -d $SECRET_DIR ]] ; then
-  echo "NO VOLUMES FROM DATA CONTAINER MOUNTED"
-  exit 1
+  f_err "There are no volumes mounted from the data container"
 fi
 
-if [[ -f $SECRET_DIR/dbdata.yaml ]] ; then
-  echo "DATABASE INFO ALREADY EXISTS"
-  exit 1
+if [[ -f $DB_FILE ]] ; then
+  f_warn "A ${DB_FILE} already exists"
 fi
 
+#################################
+### DBDATA.YAML FILE CREATION ###
+#################################
+
+if [[ ! -f $DB_FILE ]] ; then
 cat << EOF > $SECRET_DIR/dbdata.yaml
 ---
   name: $DB_NAME
   mysql: $ROOT_PASS 
   backup: $BACKUP_PASS
 EOF
+else
+  f_warn "A ${DB_FILE} already exists"
+fi
 
-chmod 600 $SECRET_DIR/dbdata.yaml
+chmod 600 ${DB_FILE} || f_warn "Unable to chown ${DB_FILE}"
 
-datadir='/var/lib/mysql'
-socketfile="$datadir/mysql.sock"
-logdir='/var/log/mariadb'
-logfile="$logdir/mariadb.log"
-errlogfile="$logdir/mariadb-error.log"
-slologfile="$logdir/mariadb-slow.log"
+##############################
+### MYSQL SETUP BELOW HERE ###
+##############################
+
+if [ ! -f "$DATADIR/ibdata1" ] ; then
+
+  mkdir -p $MYSQL_LOGDIR || f_err "Unable to create log directory"
+
+  for file in $MYSQL_ERR_LOGFILE $MYSQL_SLO_LOGFILE $MYSQL_LOGFILE ; do
+    touch $file | tee $LOGFILE || f_err "Unable to create ${file}"
+    chown mysql:mysql $file || f_err "Unable to chown ${file} to mysql.mysql"
+    chmod 0640 $file || f_err "Unable to chmod ${file} to 0640"
+  done
+
+  /usr/bin/mysql_install_db --datadir=${DATADIR} --user=mysql | tee $LOGFILE
   
-if [ ! -f "$datadir/ibdata1" ] ; then
+  chown -R mysql:mysql "$DATADIR" 
+  chmod 0755 "$DATADIR"
 
-  mkdir -p $logdir/mariadb	
-
-  touch "$errlogfile" 2>/dev/null
-  touch "$slologfile" 2>/dev/null
-  touch "$logfile" 2>/dev/null
-
-  chown mysql:mysql "$errlogfile" "$slologfile" "$logfile"
-  chmod 0640 "$errlogfile" "$slologfile" "$logfile"
-  
-  /usr/bin/mysql_install_db --datadir="$datadir" --user=mysql > /dev/null
-  
-  chown -R mysql:mysql "$datadir"
-  chmod 0755 "$datadir"
-
-  /usr/bin/mysqld_safe > /dev/null &
+  /usr/bin/mysqld_safe |tee $LOGFILE &
   sleep 5s
 
-  mysql -u root -e "CREATE DATABASE $DB_NAME;"
-  mysql -u root -e "GRANT ALL PRIVILEGES on *.* to 'backup'@'%' IDENTIFIED BY \"$BACKUP_PASS\";"
-  mysql -u root -e "GRANT ALL PRIVILEGES on $DB_NAME.* to 'root'@'%' IDENTIFIED BY \"$ROOT_PASS\";"
+  mysql -u root -e "CREATE DATABASE $DB_NAME;" \
+	  || f_err "Unable to create database"
+  mysql -u root -e "GRANT ALL PRIVILEGES on *.* to 'backup'@'%' IDENTIFIED BY \"$BACKUP_PASS\";" \
+	  || f_err "Unable to setup backup user"
+  mysql -u root -e "GRANT ALL PRIVILEGES on $DB_NAME.* to 'root'@'%' IDENTIFIED BY \"$ROOT_PASS\";" \
+	  || f_err "Unable to setup root user"
   # MAKE SURE THIS ONE IS LAST, OR WE'LL HAVE TO PASS THE ROOT PW EVERY TIME
-  mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD(\"$ROOT_PASS\") WHERE User='root'; FLUSH PRIVILEGES"
+  mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD(\"$ROOT_PASS\") WHERE User='root'; FLUSH PRIVILEGES" \
+	  || f_err "Unable to set root user password"
+
+else
+
+  f_warn "${DATADIR}/ibdata1 file exists"
 
 fi
