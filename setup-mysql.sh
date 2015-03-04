@@ -96,7 +96,7 @@ done
 chown -R mysql:mysql "$DATADIR" 
 chmod 0755 "$DATADIR"
 
-/usr/bin/mysqld_safe |tee $LOGFILE &
+/usr/bin/mysqld_safe |tee $MYSQL_LOGFILE &
 
 sleep 5s && \
 
