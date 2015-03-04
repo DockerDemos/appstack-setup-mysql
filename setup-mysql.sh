@@ -77,36 +77,34 @@ chmod 600 ${DB_FILE} || f_warn "Unable to chown ${DB_FILE}"
 ### MYSQL SETUP BELOW HERE ###
 ##############################
 
-if [ ! -f "$DATADIR/ibdata1" ] ; then
-
-  mkdir -p $MYSQL_LOGDIR || f_err "Unable to create log directory"
-
-  for file in $MYSQL_ERR_LOGFILE $MYSQL_SLO_LOGFILE $MYSQL_LOGFILE ; do
-    touch $file | tee $LOGFILE || f_err "Unable to create ${file}"
-    chown mysql:mysql $file || f_err "Unable to chown ${file} to mysql.mysql"
-    chmod 0640 $file || f_err "Unable to chmod ${file} to 0640"
-  done
-
-  /usr/bin/mysql_install_db --datadir=${DATADIR} --user=mysql | tee $LOGFILE
-  
-  chown -R mysql:mysql "$DATADIR" 
-  chmod 0755 "$DATADIR"
-
-  /usr/bin/mysqld_safe |tee $LOGFILE &
-  sleep 5s
-
-  mysql -u root -e "CREATE DATABASE $DB_NAME;" \
-	  || f_err "Unable to create database"
-  mysql -u root -e "GRANT ALL PRIVILEGES on *.* to 'backup'@'%' IDENTIFIED BY \"$BACKUP_PASS\";" \
-	  || f_err "Unable to setup backup user"
-  mysql -u root -e "GRANT ALL PRIVILEGES on $DB_NAME.* to 'root'@'%' IDENTIFIED BY \"$ROOT_PASS\";" \
-	  || f_err "Unable to setup root user"
-  # MAKE SURE THIS ONE IS LAST, OR WE'LL HAVE TO PASS THE ROOT PW EVERY TIME
-  mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD(\"$ROOT_PASS\") WHERE User='root'; FLUSH PRIVILEGES" \
-	  || f_err "Unable to set root user password"
-
-else
-
+if [ -f "$DATADIR/ibdata1" ] ; then
   f_warn "${DATADIR}/ibdata1 file exists"
-
 fi
+
+mkdir -p $MYSQL_LOGDIR || f_err "Unable to create log directory"
+
+for file in $MYSQL_ERR_LOGFILE $MYSQL_SLO_LOGFILE $MYSQL_LOGFILE ; do
+  touch $file | tee $LOGFILE || f_err "Unable to create ${file}"
+  chown mysql:mysql $file || f_err "Unable to chown ${file} to mysql.mysql"
+  chmod 0640 $file || f_err "Unable to chmod ${file} to 0640"
+done
+
+/usr/bin/mysql_install_db --datadir=${DATADIR} --user=mysql | tee $LOGFILE
+
+chown -R mysql:mysql "$DATADIR" 
+chmod 0755 "$DATADIR"
+
+/usr/bin/mysqld_safe |tee $LOGFILE &
+sleep 5s
+
+mysql -u root -e "CREATE DATABASE $DB_NAME;" \
+        || f_err "Unable to create database"
+mysql -u root -e "GRANT ALL PRIVILEGES on *.* to 'backup'@'%' IDENTIFIED BY \"$BACKUP_PASS\";" \
+        || f_err "Unable to setup backup user"
+mysql -u root -e "GRANT ALL PRIVILEGES on $DB_NAME.* to 'root'@'%' IDENTIFIED BY \"$ROOT_PASS\";" \
+        || f_err "Unable to setup root user"
+# MAKE SURE THIS ONE IS LAST, OR WE'LL HAVE TO PASS THE ROOT PW EVERY TIME
+mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD(\"$ROOT_PASS\") WHERE User='root'; FLUSH PRIVILEGES" \
+        || f_err "Unable to set root user password"
+
+kill -TERM $(pgrep -U mysql)
