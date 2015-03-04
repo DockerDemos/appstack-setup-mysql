@@ -1,6 +1,7 @@
 FROM centos:centos7
 MAINTAINER Chris Collins <collins.christopher@gmail.com>
 
+ENV TERM xterm
 
 RUN echo -e "\
 [EPEL]\n\
