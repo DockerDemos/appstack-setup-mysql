@@ -50,32 +50,22 @@ if [[ -z $BACKUP_PASS ]] ; then
   f_err "No backup password was generated - is pwgen installed?"
 fi
 
-echo "DEBUG:"
-echo "With var"
-ls -lad $SECRET_DIR
-ls -la $SECRET_DIR
-echo "manual"
-ls -lad /root/.secret/
-ls -la /root/.secret/
 if [[ ! -d $SECRET_DIR ]] ; then
   f_err "There are no volumes mounted from the data container"
 fi
 
-echo "DEBUG:"
-echo "With var"
-ls -la $DB_FILE
-echo "manual"
-ls -la /root/.secret/dbdata.yaml
 if [[ -f $DB_FILE ]] ; then
   f_warn "A ${DB_FILE} already exists"
+fi
+
+if [ -f "${DATADIR}/ibdata1" ] ; then
+  f_warn "${DATADIR}/ibdata1 file exists"
 fi
 
 #################################
 ### DBDATA.YAML FILE CREATION ###
 #################################
 
-echo "DEBUG:"
-ls -la $DB_FILE
 if [[ ! -f $DB_FILE ]] ; then
 cat << EOF > $DB_FILE
 ---
@@ -92,10 +82,6 @@ chmod 600 $DB_FILE || f_warn "Unable to chown ${DB_FILE}"
 ##############################
 ### MYSQL SETUP BELOW HERE ###
 ##############################
-
-if [ -f "${DATADIR}/ibdata1" ] ; then
-  f_warn "${DATADIR}/ibdata1 file exists"
-fi
 
 mkdir -p $MYSQL_LOGDIR || f_err "Unable to create log directory"
 
@@ -124,4 +110,4 @@ mysql -u root -e "GRANT ALL PRIVILEGES on ${DB_NAME}.* to 'root'@'%' IDENTIFIED 
 mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD(\"${ROOT_PASS}\") WHERE User='root'; FLUSH PRIVILEGES" \
         || f_err "Unable to set root user password"
 
-kill -15 $(pgrep -U mysql) | tee $MYSQL_LOGFILE
+mysqladmin -uroot -p${ROOT_PASS} shutdown | tee $MYSQL_LOGFILE
