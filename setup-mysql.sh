@@ -1,5 +1,7 @@
 #!/bin/sh
 
+bash -x
+
 ###############################
 ### SCRIPT CONFIG VARIABLES ###
 ###############################
@@ -9,7 +11,7 @@ ROOT_PASS=$(pwgen -c -n -1 16)
 BACKUP_PASS=$(pwgen -c -n -1 16)
 SECRET_DIR='/root/.secret'
 DB_FILE="${SECRET_DIR}/dbdata.yaml"
-LOGFILE='/var/log/setup-mysql.log'
+LOGFILE='/var/log/mariadb/setup.log'
 
 ##############################
 ### MYSQL CONFIG VARIABLES ###
@@ -89,13 +91,14 @@ for file in $MYSQL_ERR_LOGFILE $MYSQL_SLO_LOGFILE $MYSQL_LOGFILE ; do
   chmod 0640 $file || f_err "Unable to chmod ${file} to 0640"
 done
 
-/usr/bin/mysql_install_db --datadir=${DATADIR} --user=mysql | tee $LOGFILE
+/usr/bin/mysql_install_db --datadir=${DATADIR} --user=mysql | tee $MYSQL_LOGFILE
 
 chown -R mysql:mysql "$DATADIR" 
 chmod 0755 "$DATADIR"
 
 /usr/bin/mysqld_safe |tee $LOGFILE &
-sleep 5s
+
+sleep 5s & \
 
 mysql -u root -e "CREATE DATABASE $DB_NAME;" \
         || f_err "Unable to create database"
@@ -107,4 +110,4 @@ mysql -u root -e "GRANT ALL PRIVILEGES on $DB_NAME.* to 'root'@'%' IDENTIFIED BY
 mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD(\"$ROOT_PASS\") WHERE User='root'; FLUSH PRIVILEGES" \
         || f_err "Unable to set root user password"
 
-kill -TERM $(pgrep -U mysql)
+kill -TERM $(pgrep -U mysql) | tee $MYSQL_LOGFILE
