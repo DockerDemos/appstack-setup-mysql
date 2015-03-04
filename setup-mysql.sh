@@ -11,7 +11,7 @@ ROOT_PASS=$(pwgen -c -n -1 16)
 BACKUP_PASS=$(pwgen -c -n -1 16)
 SECRET_DIR='/root/.secret'
 DB_FILE="${SECRET_DIR}/dbdata.yaml"
-LOGFILE='/var/log/mariadb/setup.log'
+LOGFILE='/var/log/mariadb-setup.log'
 
 ##############################
 ### MYSQL CONFIG VARIABLES ###
