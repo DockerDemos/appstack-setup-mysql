@@ -19,9 +19,9 @@ LOGFILE='/var/log/mariadb-setup.log'
 
 DATADIR='/var/lib/mysql'
 MYSQL_LOGDIR='/var/log/mariadb'
-MYSQL_LOGFILE="$MYSQL_LOGDIR/mariadb.log"
-MYSQL_ERR_LOGFILE="$MYSQL_LOGDIR/mariadb-error.log"
-MYSQL_SLO_LOGFILE="$MYSQL_LOGDIR/mariadb-slow.log"
+MYSQL_LOGFILE="${MYSQL_LOGDIR}/mariadb.log"
+MYSQL_ERR_LOGFILE="${MYSQL_LOGDIR}/mariadb-error.log"
+MYSQL_SLO_LOGFILE="${MYSQL_LOGDIR}/mariadb-slow.log"
 
 ### FUNCTIONS ###
 
@@ -50,10 +50,22 @@ if [[ -z $BACKUP_PASS ]] ; then
   f_err "No backup password was generated - is pwgen installed?"
 fi
 
+echo "DEBUG:"
+echo "With var"
+ls -lad $SECRET_DIR
+ls -la $SECRET_DIR
+echo "manual"
+ls -lad /root/.secret/
+ls -la /root/.secret/
 if [[ ! -d $SECRET_DIR ]] ; then
   f_err "There are no volumes mounted from the data container"
 fi
 
+echo "DEBUG:"
+echo "With var"
+ls -la $DB_FILE
+echo "manual"
+ls -la /root/.secret/dbdata.yaml
 if [[ -f $DB_FILE ]] ; then
   f_warn "A ${DB_FILE} already exists"
 fi
@@ -62,8 +74,10 @@ fi
 ### DBDATA.YAML FILE CREATION ###
 #################################
 
+echo "DEBUG:"
+ls -la $DB_FILE
 if [[ ! -f $DB_FILE ]] ; then
-cat << EOF > $SECRET_DIR/dbdata.yaml
+cat << EOF > $DB_FILE
 ---
   name: $DB_NAME
   mysql: $ROOT_PASS 
@@ -73,13 +87,13 @@ else
   f_warn "A ${DB_FILE} already exists"
 fi
 
-chmod 600 ${DB_FILE} || f_warn "Unable to chown ${DB_FILE}"
+chmod 600 $DB_FILE || f_warn "Unable to chown ${DB_FILE}"
 
 ##############################
 ### MYSQL SETUP BELOW HERE ###
 ##############################
 
-if [ -f "$DATADIR/ibdata1" ] ; then
+if [ -f "${DATADIR}/ibdata1" ] ; then
   f_warn "${DATADIR}/ibdata1 file exists"
 fi
 
@@ -93,21 +107,21 @@ done
 
 /usr/bin/mysql_install_db --datadir=${DATADIR} --user=mysql | tee $MYSQL_LOGFILE
 
-chown -R mysql:mysql "$DATADIR" 
-chmod 0755 "$DATADIR"
+chown -R mysql:mysql "${DATADIR}" 
+chmod 0755 "${DATADIR}"
 
 /usr/bin/mysqld_safe |tee $MYSQL_LOGFILE &
 
 sleep 5s && \
 
-mysql -u root -e "CREATE DATABASE $DB_NAME;" \
+mysql -u root -e "CREATE DATABASE ${DB_NAME};" \
         || f_err "Unable to create database"
-mysql -u root -e "GRANT ALL PRIVILEGES on *.* to 'backup'@'%' IDENTIFIED BY \"$BACKUP_PASS\";" \
+mysql -u root -e "GRANT ALL PRIVILEGES on *.* to 'backup'@'%' IDENTIFIED BY \"${BACKUP_PASS}\";" \
         || f_err "Unable to setup backup user"
-mysql -u root -e "GRANT ALL PRIVILEGES on $DB_NAME.* to 'root'@'%' IDENTIFIED BY \"$ROOT_PASS\";" \
+mysql -u root -e "GRANT ALL PRIVILEGES on ${DB_NAME}.* to 'root'@'%' IDENTIFIED BY \"${ROOT_PASS}\";" \
         || f_err "Unable to setup root user"
 # MAKE SURE THIS ONE IS LAST, OR WE'LL HAVE TO PASS THE ROOT PW EVERY TIME
-mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD(\"$ROOT_PASS\") WHERE User='root'; FLUSH PRIVILEGES" \
+mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD(\"${ROOT_PASS}\") WHERE User='root'; FLUSH PRIVILEGES" \
         || f_err "Unable to set root user password"
 
 kill -15 $(pgrep -U mysql) | tee $MYSQL_LOGFILE
