@@ -3,9 +3,9 @@
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1
 
-iEYEABECAAYFAlT3IuUACgkQte6EFif3vzfrzQCdEAYtWV/VEUcUWY1xgvsYBHxc
-MyEAn30YKSaB4dAKciSiBvWXysEIpk4x
-=+d7K
+iEYEABECAAYFAlT3JE4ACgkQte6EFif3vzei2ACgkzN0bCW8S7evlxKKeZ3k5gCg
+CWQAoLI1Tsdu5gKwVmNXkqWOafkA13/j
+=+T7p
 -----END PGP SIGNATURE-----
 
 ```
@@ -21,7 +21,7 @@ size   exec  file              contents
              ./                                                                                
 570            Dockerfile      3aedb589a83857728a3a59c9b28aac84416143acc64c921acc41bb9eba9fb0eb
 35121          LICENSE         e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704
-3072   x       setup-mysql.sh  4d63db72571da76a759e30614fa0e86848f309f26040dd79db0527ef741a1215
+3071   x       setup-mysql.sh  45e5bad6410e96bc20cec20e93c0594809fe87d9cadad174d77186230eb11bf5
 ```
 
 #### Ignore

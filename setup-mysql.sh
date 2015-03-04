@@ -1,6 +1,6 @@
 #!/bin/sh
 
-bash -x
+set -x
 
 ###############################
 ### SCRIPT CONFIG VARIABLES ###
