@@ -110,4 +110,4 @@ mysql -u root -e "GRANT ALL PRIVILEGES on $DB_NAME.* to 'root'@'%' IDENTIFIED BY
 mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD(\"$ROOT_PASS\") WHERE User='root'; FLUSH PRIVILEGES" \
         || f_err "Unable to set root user password"
 
-kill -TERM $(pgrep -U mysql) | tee $MYSQL_LOGFILE
+kill -15 $(pgrep -U mysql) | tee $MYSQL_LOGFILE
