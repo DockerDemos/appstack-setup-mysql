@@ -98,7 +98,7 @@ chmod 0755 "$DATADIR"
 
 /usr/bin/mysqld_safe |tee $LOGFILE &
 
-sleep 5s & \
+sleep 5s && \
 
 mysql -u root -e "CREATE DATABASE $DB_NAME;" \
         || f_err "Unable to create database"
