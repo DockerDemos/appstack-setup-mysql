@@ -9,7 +9,7 @@ set -x
 DB_NAME=$(pwgen -c -n -1)
 ROOT_PASS=$(pwgen -c -n -1 16)
 BACKUP_PASS=$(pwgen -c -n -1 16)
-SECRET_DIR='/root/.secret'
+SECRET_DIR='/conf/.creds'
 DB_FILE="${SECRET_DIR}/dbdata.yaml"
 LOGFILE='/var/log/mariadb-setup.log'
 
