@@ -50,7 +50,7 @@ if [[ -z $BACKUP_PASS ]] ; then
   f_err "No backup password was generated - is pwgen installed?"
 fi
 
-if [[ ! -d $SECRET_DIR ]] ; then
+if [[ ! -d '/conf' ]] ; then
   f_err "There are no volumes mounted from the data container"
 fi
 
@@ -65,6 +65,11 @@ fi
 #################################
 ### DBDATA.YAML FILE CREATION ###
 #################################
+
+if [[ ! -d $SECRET_DIR ]] ; then
+  f_warn "$SECRET_DIR did not exist; creating"
+  mkdir -p $SECRET_DIR
+fi
 
 if [[ ! -f $DB_FILE ]] ; then
 cat << EOF > $DB_FILE
