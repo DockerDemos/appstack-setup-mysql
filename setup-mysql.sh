@@ -67,7 +67,7 @@ fi
 #################################
 
 if [[ ! -d $SECRET_DIR ]] ; then
-  f_warn "$SECRET_DIR did not exist; creating"
+  echo "$SECRET_DIR did not exist; creating"
   mkdir -p $SECRET_DIR
 fi
 
