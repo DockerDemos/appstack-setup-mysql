@@ -32,7 +32,6 @@ f_err() {
 
 f_warn() {
   echo "$(date '+%Y-%m-%dT%H:%M') - $1" | tee $LOGFILE
-  exit 0
 }
 
 ### LOGFILE AND TESTS ###
@@ -67,7 +66,7 @@ fi
 #################################
 
 if [[ ! -d $SECRET_DIR ]] ; then
-  echo "$SECRET_DIR did not exist; creating"
+  f_warn "$SECRET_DIR did not exist; creating"
   mkdir -p $SECRET_DIR
 fi
 
