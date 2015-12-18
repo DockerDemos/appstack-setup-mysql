@@ -54,11 +54,11 @@ if [[ ! -d '/conf' ]] ; then
 fi
 
 if [[ -f $DB_FILE ]] ; then
-  f_warn "A ${DB_FILE} already exists"
+  f_err "A ${DB_FILE} already exists"
 fi
 
 if [ -f "${DATADIR}/ibdata1" ] ; then
-  f_warn "${DATADIR}/ibdata1 file exists"
+  f_err "${DATADIR}/ibdata1 file exists"
 fi
 
 #################################
