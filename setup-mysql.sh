@@ -107,6 +107,8 @@ mysql -u root -e "GRANT ALL PRIVILEGES on *.* to 'backup'@'%' IDENTIFIED BY \"${
         || f_err "Unable to setup backup user"
 mysql -u root -e "GRANT ALL PRIVILEGES on ${DB_NAME}.* to 'root'@'%' IDENTIFIED BY \"${ROOT_PASS}\";" \
         || f_err "Unable to setup root user"
+mysql -u root -e "GRANT ALL PRIVILEGES on mysql.* to 'root'@'%' IDENTIFIED BY \"${ROOT_PASS}\";" \
+        || f_err "Unable to setup root user"
 # MAKE SURE THIS ONE IS LAST, OR WE'LL HAVE TO PASS THE ROOT PW EVERY TIME
 mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD(\"${ROOT_PASS}\") WHERE User='root'; FLUSH PRIVILEGES" \
         || f_err "Unable to set root user password"

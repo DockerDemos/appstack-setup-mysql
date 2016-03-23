@@ -16,4 +16,6 @@ gpgcheck=0\n\
 RUN yum install -y pwgen hostname mariadb-server && yum clean all
 ADD setup-mysql.sh /setup-mysql.sh 
 
+ADD utf8.cnf /etc/my.cnf.d/utf8.cnf
+
 ENTRYPOINT ["/setup-mysql.sh"]
